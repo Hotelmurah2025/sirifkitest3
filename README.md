@@ -202,9 +202,160 @@ A comprehensive hotel management system built with CodeIgniter 3, featuring room
 - Check-out notifications
 - API integration capability
 
-## Security Considerations
-- Password hashing
-- CSRF protection
-- XSS prevention
-- Input validation
-- Role-based access control
+## Security Implementation Guide
+
+### 1. Form Validation and Input Security
+```php
+// Controller example using CodeIgniter form validation
+public function store() {
+    $this->load->library('form_validation');
+    
+    // Set validation rules
+    $this->form_validation->set_rules('guest_name', 'Nama Tamu', 'required|min_length[3]|xss_clean');
+    $this->form_validation->set_rules('guest_email', 'Email', 'required|valid_email');
+    $this->form_validation->set_rules('guest_phone', 'Nomor Telepon', 'required|numeric|min_length[10]');
+    
+    if ($this->form_validation->run() === FALSE) {
+        // Handle validation errors
+        $this->load->view('form_view');
+    } else {
+        // Process valid data
+        $this->ReservationModel->create($this->input->post());
+    }
+}
+```
+
+### 2. Data Protection
+#### Sensitive Data Handling
+- Guest Information:
+  ```php
+  // Model example for encrypting sensitive data
+  public function store_guest_data($data) {
+      $encrypted_data = [
+          'name' => $data['name'],
+          'email' => $this->encryption->encrypt($data['email']),
+          'phone' => $this->encryption->encrypt($data['phone'])
+      ];
+      return $this->db->insert('guests', $encrypted_data);
+  }
+  ```
+- Financial Reports:
+  - Implement role-based access for financial data
+  - Log all access to financial reports
+  - Encrypt sensitive financial information
+
+### 3. Authentication & Authorization
+```php
+// Example of multi-level user access control
+class Auth {
+    private $access_levels = [
+        'admin' => 100,
+        'receptionist' => 50,
+        'housekeeping' => 25
+    ];
+
+    public function check_access($required_level) {
+        $user_level = $this->session->userdata('user_level');
+        return $this->access_levels[$user_level] >= $this->access_levels[$required_level];
+    }
+}
+
+// Usage in controllers
+public function financial_report() {
+    if (!$this->auth->check_access('admin')) {
+        show_error('Unauthorized access', 403);
+    }
+    // Process report
+}
+```
+
+### 4. Database Security
+- Use CodeIgniter's Query Builder for safe queries:
+```php
+// Safe query example
+$this->db->where('id', $this->input->post('id', TRUE));
+$this->db->get('reservations');
+
+// Instead of raw SQL:
+// SELECT * FROM reservations WHERE id = '$id' // Vulnerable to SQL injection
+```
+
+### 5. Session Security
+```php
+// Configure secure session in config.php
+$config['sess_cookie_name'] = 'ci_session';
+$config['sess_expiration'] = 7200;
+$config['sess_save_path'] = NULL;
+$config['sess_match_ip'] = TRUE;
+$config['sess_time_to_update'] = 300;
+```
+
+### 6. CSRF Protection
+```php
+// In forms
+<?php echo form_open('reservation/create'); ?>
+// Automatically adds CSRF token
+
+// Verify in controllers
+if ($this->security->get_csrf_hash() !== $this->input->post('csrf_token')) {
+    show_error('Invalid security token');
+}
+```
+
+### 7. XSS Prevention
+- Enable global XSS filtering in config.php:
+```php
+$config['global_xss_filtering'] = TRUE;
+```
+- Use `html_escape()` when outputting data:
+```php
+<?php echo html_escape($guest_name); ?>
+```
+
+### 8. File Upload Security
+```php
+// Secure file upload configuration
+$config['upload_path'] = './uploads/';
+$config['allowed_types'] = 'gif|jpg|png|pdf';
+$config['max_size'] = 2048;
+$config['file_ext_tolower'] = TRUE;
+$config['encrypt_name'] = TRUE;
+```
+
+### 9. Error Handling
+```php
+// Custom error handler
+public function show_error($message, $status_code = 500) {
+    log_message('error', $message);
+    $this->output->set_status_header($status_code);
+    $this->load->view('errors/custom_error', ['message' => $message]);
+}
+```
+
+### 10. Security Best Practices
+1. **Password Management**
+   - Use password_hash() for storing passwords
+   - Implement password complexity requirements
+   - Regular password rotation policy
+
+2. **Access Control**
+   - Implement principle of least privilege
+   - Regular access review
+   - Session timeout for inactive users
+
+3. **Data Protection**
+   - Regular backups
+   - Data encryption at rest
+   - Secure communication (HTTPS)
+
+4. **Monitoring**
+   - Implement activity logging
+   - Regular security audits
+   - Monitor failed login attempts
+
+5. **Maintenance**
+   - Regular security updates
+   - Periodic security assessment
+   - Incident response plan
+
+Remember to always validate and sanitize all user inputs, implement proper access controls, and regularly update security measures to protect sensitive hotel data.
