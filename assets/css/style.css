@@ -1,0 +1,50 @@
+/* Main Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Navigation */
+.navbar {
+    margin-bottom: 20px;
+}
+
+/* Content Container */
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Tables */
+.table-responsive {
+    margin-top: 1rem;
+}
+
+/* Cards */
+.card {
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn-action {
+    margin-right: 0.5rem;
+}
+
+/* Status Colors */
+.status-available {
+    color: #28a745;
+}
+
+.status-occupied {
+    color: #dc3545;
+}
+
+.status-dirty {
+    color: #ffc107;
+}
