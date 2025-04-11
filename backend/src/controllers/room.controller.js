@@ -49,7 +49,18 @@ exports.getRoomsByHotelId = async (req, res) => {
 
 exports.getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    console.log('Getting room by ID:', req.params.id);
+    
+    if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      console.log('Invalid room ID format:', req.params.id);
+      return res.status(400).json({
+        success: false,
+        message: 'Format ID kamar tidak valid'
+      });
+    }
+    
+    const room = await Room.findById(req.params.id).populate('hotel_id', 'nama_hotel');
+    console.log('Room found:', room ? 'Yes' : 'No');
     
     if (!room) {
       return res.status(404).json({
@@ -63,6 +74,7 @@ exports.getRoomById = async (req, res) => {
       data: room
     });
   } catch (error) {
+    console.error('Error getting room by ID:', error);
     res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan saat mengambil data kamar',

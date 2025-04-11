@@ -91,9 +91,14 @@ export default function AddEditRoom() {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
+        console.log('Fetching hotels...');
         const response = await hotelService.getAll();
+        console.log('Hotel API response:', response);
         if (response.success && response.data) {
           setHotels(response.data);
+          console.log('Hotels set in state:', response.data);
+        } else {
+          console.error('Failed to fetch hotels:', response.message);
         }
       } catch (error) {
         console.error('Error fetching hotels:', error);
@@ -108,6 +113,10 @@ export default function AddEditRoom() {
       
       const fetchRoomData = async () => {
         try {
+          if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            throw new Error('Format ID kamar tidak valid. Silakan kembali ke daftar kamar dan pilih kamar yang valid.');
+          }
+          
           const response = await roomService.getById(id);
           
           if (response.success && response.data) {
@@ -124,7 +133,7 @@ export default function AddEditRoom() {
               foto_kamar: []
             });
             
-            console.log('Fetched room data:', roomData); // Tambahkan logging
+            console.log('Fetched room data:', roomData);
             setRoomImagesPreview(roomData.foto_kamar || []);
             
             fetchRateplans(roomData._id);
@@ -135,6 +144,12 @@ export default function AddEditRoom() {
           const error = err as Error;
           setErrorMessage(error.message || 'Terjadi kesalahan saat memuat data kamar');
           console.error('Error fetching room data:', err);
+          
+          if (error.message.includes('Format ID kamar tidak valid')) {
+            setTimeout(() => {
+              navigate('/rooms');
+            }, 3000);
+          }
         } finally {
           setLoading(false);
         }
@@ -142,7 +157,7 @@ export default function AddEditRoom() {
       
       fetchRoomData();
     }
-  }, [isEditMode, id]);
+  }, [isEditMode, id, navigate]);
   
   const fetchRateplans = async (roomId: string) => {
     if (!roomId) return;
