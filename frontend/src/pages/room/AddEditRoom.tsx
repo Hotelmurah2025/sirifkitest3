@@ -124,6 +124,7 @@ export default function AddEditRoom() {
               foto_kamar: []
             });
             
+            console.log('Fetched room data:', roomData); // Tambahkan logging
             setRoomImagesPreview(roomData.foto_kamar || []);
             
             fetchRateplans(roomData._id);
@@ -368,6 +369,7 @@ export default function AddEditRoom() {
                   onChange={handleInputChange}
                   className="flex h-9 w-full rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 disabled:cursor-not-allowed disabled:opacity-50"
                   required
+                  key={`hotel-select-${formData.hotel_id}`} // Tambahkan key untuk memaksa re-render
                 >
                   <option value="">Pilih Hotel</option>
                   {hotels.map(hotel => (

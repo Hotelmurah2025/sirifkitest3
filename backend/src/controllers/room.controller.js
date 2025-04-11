@@ -73,17 +73,34 @@ exports.getRoomById = async (req, res) => {
 
 exports.updateRoom = async (req, res) => {
   try {
-    const { nama_kamar, tipe_tempat_tidur, fasilitas_kamar, harga_default } = req.body;
+    const { hotel_id, nama_kamar, tipe_tempat_tidur, fasilitas_kamar, harga_default, kapasitas, jumlah_kamar } = req.body;
+    
+    let parsedFasilitas = fasilitas_kamar;
+    if (typeof fasilitas_kamar === 'string') {
+      try {
+        parsedFasilitas = JSON.parse(fasilitas_kamar);
+      } catch (e) {
+        parsedFasilitas = [];
+      }
+    }
     
     const updateData = {
+      hotel_id, // Tambahkan hotel_id yang sebelumnya hilang
       nama_kamar,
       tipe_tempat_tidur,
-      fasilitas_kamar: fasilitas_kamar || [],
-      harga_default
+      fasilitas_kamar: parsedFasilitas || [],
+      harga_default,
+      kapasitas: kapasitas || 2,
+      jumlah_kamar: jumlah_kamar || 1
     };
     
     if (req.files && req.files.length > 0) {
       updateData.foto_kamar = req.files.map(file => file.filename);
+    } else {
+      const existingRoom = await Room.findById(req.params.id);
+      if (existingRoom && existingRoom.foto_kamar && existingRoom.foto_kamar.length > 0) {
+        updateData.foto_kamar = existingRoom.foto_kamar;
+      }
     }
     
     const room = await Room.findByIdAndUpdate(
@@ -105,6 +122,7 @@ exports.updateRoom = async (req, res) => {
       data: room
     });
   } catch (error) {
+    console.error('Error updating room:', error);
     res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan saat memperbarui data kamar',
